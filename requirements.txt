@@ -1,3 +1,6 @@
 python-telegram-bot
+bs4
+emoji
 gtts
 googletrans
+youtube_search

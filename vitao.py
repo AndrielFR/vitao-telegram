@@ -2,18 +2,23 @@ from telegram.ext import *
 from telegram import *
 
 # Modules
+from bs4 import BeautifulSoup
+from emoji import get_emoji_regexp
 from googletrans import LANGUAGES, Translator
 from gtts import gTTS
 from gtts.lang import tts_langs
+from youtube_search  import YoutubeSearch
+
 import os
+import json
 
 class Bot():
     def __init__(self):
         self.OWNER = 'AndrielFR'
-        self.OWNER_CHAT_ID = 0
+        self.OWNER_CHAT_ID =  0
         self.CHAT_CONNECTED = 0
         self.ACTIVE = False
-
+    
     def run(self, updater):
         updater.start_polling()
     
@@ -26,7 +31,7 @@ class Bot():
         if message.startswith('/') or message.startswith('!'):
             #print(update)
             #print(update.message)
-            command = message.replace('/', '').replace('!', '').split(' ')[0]
+            command = message.replace('/', '').replace('!', '').split(' ')[0].lower()
             message = message.replace('/{0} '.format(command), '').replace('!{0} '.format(command), '').replace('/{0}'.format(command), '').replace('!{0}'.format(command), '')
 
             if update.message.chat.username == self.OWNER:
@@ -96,6 +101,7 @@ class Bot():
                       
             # /tts
             if command in ['tts']:
+                print(update.message) 
                 tx = update.message.reply_to_message
                 message = message
                 if message:
@@ -106,7 +112,7 @@ class Bot():
                     return
                             
                 try:
-                    gTTS(message, lang='pt')
+                    gTTS(message, lang='pt-br')
                 except AssertionError:
                     bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='O texto está vazio.')
                 except RuntimeError:
@@ -133,6 +139,57 @@ class Bot():
                         else:
                             bot.send_voice(chat_id=update.message.chat.id, reply_to_message_id=update.message.message_id, voice=a)
                     os.remove('v.mp3')
+                    
+            # /trt ou translate
+            if command in ['trt', 'translate']:
+                translator = Translator()
+                tx = update.message.reply_to_message
+                message = message
+                if message:
+                    pass
+                elif tx:
+                    message = tx.text
+                else:
+                    return
+                            
+                r_te = None
+                try:
+                    r_te = translator.translate(self.deEmojify(message), dest='pt')
+                except:
+                    return
+                    
+                bot.send_chat_action(chat_id=update.message.chat.id, action='typing')
+                s_l = LANGUAGES[f"{r_te.src.lower()}"]
+                t_l = LANGUAGES[f"{r_te.dest.lower()}"]
+                r_te = f"De: ***{s_l.title()}***\nPara: ***{t_l.title()}***\n\n{r_te.text}"
+                bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text=r_te)
+                
+            # /yt ou youtube
+            if command in ['yt', 'youtube']:
+                s = message
+                if not s:
+                    bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='O texto está vazio.')
+                    return
+                
+                r = None
+                try:
+                    r = json.loads(YoutubeSearch(s, max_results=1).to_json())
+                except KeyError:
+                    bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='Vídeo não encontrado.')
+                    
+                bot.send_chat_action(chat_id=update.message.chat.id, action='typing')
+                o = ''
+                for i in r["videos"]:
+                    try:
+                        o += '***Título:*** ```'+str(i["title"])+'```\n'
+                        o += '***Link:*** '+"https://youtube.com"+str(i["url_suffix"])+'\n'
+                        o += '***Canal:*** ```'+str(i["channel"])+'```\n'
+                        o += '***Duração:*** '+str(i["duration"])+'\n'
+                        o += '***'+str(i["views"])+'***\n'
+                    except IndexError:
+                        break
+                bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text=o)
+            
             return
         
         #print(update.message)
@@ -155,10 +212,13 @@ class Bot():
     def group_handler(self, bot, update):
         if update.message.chat.id == self.CHAT_CONNECTED:
             pass
+            
+    def deEmojify(self, text):
+            return get_emoji_regexp().sub("", text)
                 
 if __name__ == '__main__':
     b = Bot()
-    updater = Updater(token= '')
+    updater = Updater(token= '' )
 
     updater.dispatcher.add_handler(MessageHandler(Filters.all, b._handler))
     #updater.dispatcher.add_handler(MessageHandler(Filters.group, b.group_handler))
