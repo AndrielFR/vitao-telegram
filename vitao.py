@@ -10,16 +10,17 @@ import os
 class Bot():
     def __init__(self):
         self.OWNER = 'AndrielFR'
-        #self.CHAT_CONNECTED =  -1001493681484
-        self.CHAT_CONNECTED = -1001297842259
-        #self.CHAT_CONNECTED = -1001387940789
+        self.OWNER_CHAT_ID = 0
+        self.CHAT_CONNECTED = 0
         self.ACTIVE = False
-    
+
     def run(self, updater):
         updater.start_polling()
     
     def _handler(self, bot, update):
-        if update.message.text == None:
+        if not update.message:
+            return
+        if not update.message.text:
             return
         message = update.message.text
         if message.startswith('/') or message.startswith('!'):
@@ -122,9 +123,15 @@ class Bot():
                 with open('v.mp3', 'rb') as a:
                     try:
                         bot.delete_message(chat_id=update.message.chat.id, message_id=update.message.message_id)
-                        bot.send_voice(chat_id=update.message.chat.id, voice=a)
+                        if tx:
+                            bot.send_voice(chat_id=update.message.chat.id, reply_to_message_id=tx.message_id, voice=a)
+                        else:
+                            bot.send_voice(chat_id=update.message.chat.id, voice=a)
                     except:
-                        bot.send_voice(chat_id=update.message.chat.id, reply_to_message_id=update.message.message_id, voice=a)
+                        if tx:
+                            bot.send_voice(chat_id=update.message.chat.id, reply_to_message_id=tx.message_id, voice=a)
+                        else:
+                            bot.send_voice(chat_id=update.message.chat.id, reply_to_message_id=update.message.message_id, voice=a)
                     os.remove('v.mp3')
             return
         
@@ -135,8 +142,9 @@ class Bot():
         if update.message.chat.id == self.CHAT_CONNECTED:
             message = update.message.text
             message = str(message).lower()
-            bot.forward_message(chat_id=self.OWNER, from_chat_id=update.message.chat.id, message_id=update.message.message_id)
-            bot.send_message(chat_id=self.OWNER, parse_mode='MARKDOWN', text='***ID da mensagem:*** ```'+str(update.message.message_id)+'``` 👆')
+            #bot.forward_message(chat_id=self.OWNER_CHAT_ID, from_chat_id=self.CHAT_CONNECTED, message_id=update.message.message_id)
+            bot.send_message(chat_id=self.OWNER_CHAT_ID, parse_mode='MARKDOWN', text='***U:*** @{0}    \n***M: 👇🏾***\n{1}    \n\n***Responda:*** ``` {2} ```👆🏾'.format(update.message.from_user.username, update.message.text, '!rm '+str(update.message.message_id)))
+            
             if 'babaluu' in message:
                 update.message.reply_markdown('Me chamou?')
             elif 'bom dia' in message:
@@ -147,12 +155,12 @@ class Bot():
     def group_handler(self, bot, update):
         if update.message.chat.id == self.CHAT_CONNECTED:
             pass
-
+                
 if __name__ == '__main__':
     b = Bot()
     updater = Updater(token= '')
 
     updater.dispatcher.add_handler(MessageHandler(Filters.all, b._handler))
-    updater.dispatcher.add_handler(MessageHandler(Filters.group, b.group_handler))
+    #updater.dispatcher.add_handler(MessageHandler(Filters.group, b.group_handler))
 
     b.run(updater)
