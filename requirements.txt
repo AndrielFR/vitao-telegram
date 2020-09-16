@@ -4,3 +4,4 @@ emoji
 gtts
 googletrans
 youtube_search
+requests

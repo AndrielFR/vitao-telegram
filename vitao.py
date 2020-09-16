@@ -8,15 +8,20 @@ from googletrans import LANGUAGES, Translator
 from gtts import gTTS
 from gtts.lang import tts_langs
 from youtube_search  import YoutubeSearch
+from requests import exceptions, get, post
 
 import os
 import json
+import random
 
 class Bot():
     def __init__(self):
         self.OWNER = 'AndrielFR'
-        self.OWNER_CHAT_ID =  0
-        self.CHAT_CONNECTED = 0
+        self.DOWNLOAD_DIR = 'dl/'
+        
+        self.OWNER_CHAT_ID = 0
+        self.CHAT_CONNECTED =  0
+        
         self.ACTIVE = False
     
     def run(self, updater):
@@ -29,14 +34,13 @@ class Bot():
             return
         message = update.message.text
         if message.startswith('/') or message.startswith('!'):
-            #print(update)
-            #print(update.message)
             command = message.replace('/', '').replace('!', '').split(' ')[0].lower()
             message = message.replace('/{0} '.format(command), '').replace('!{0} '.format(command), '').replace('/{0}'.format(command), '').replace('!{0}'.format(command), '')
 
             if update.message.chat.username == self.OWNER:
                 # /fowardon e fowardoff
                 if command in ['fon', 'fowardon']:
+                    bot.send_chat_action(chat_id=update.message.chat.id, action='typing')
                     if not self.ACTIVE:
                         self.ACTIVE = True
                         update.message.reply_markdown('***Acordei!***')
@@ -56,52 +60,68 @@ class Bot():
                 
                 # /getmemberscount ou /gmc
                 if command in ['gcmc', 'getchatmemberscount']:
+                    bot.send_chat_action(chat_id=update.message.chat.id, action='typing')
                     try:
-                        membersCount = bot.get_chat_members_count(message)
-                        update.message.reply_markdown('O chat ```{0}``` contém ***{1}*** usuários.'.format(message, membersCount))
+                        _chat = bot.get_chat(message)
+                        membersCount = bot.get_chat_members_count(_chat.id)
+                        bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='O chat ```{0}``` contém ***{1}*** usuários.'.format(_chat.title, membersCount))
                     except:
-                        update.message.reply_markdown("Não estou no chat: ```{0}```".format(message))
+                        bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='Me adicione ao chat antes')
                     
                 # /leavechat ou lc
                 if command in ['lc', 'leavechat']:
+                    bot.send_chat_action(chat_id=update.message.chat.id, action='typing')
                     try:
-                        bot.send_message(message, "Até um outro dia pessoal, eu amo vocês!")
+                        bot.send_message(chat_id=self.CHAT_CONNECTED, parse_mode='MARKDOWN', text='Até um outro dia pessoal, eu amo vocês!')
                     except:
                         pass
                     try:
-                        bot.leave_chat(message)
-                        update.message.reply_markdown('Sai com sucesso do chat: ```{0}```'.format(message))
+                        _chat = bot.get_chat(message)
+                        bot.leave_chat(_chat.id)
+                        bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='Sai com sucesso do chat: ```{0}```'.format(_chat.title))
                     except:
-                        update.message.reply_markdown("Não estou no chat: ```{0}```".format(message))
+                        bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text="Não foi possível sair do chat: ```{0}```".format(message))
 
                 # /sendmessage ou sm
                 if command in ['sm', 'sendmessage']:
+                    bot.send_chat_action(chat_id=update.message.chat.id, action='typing')
                     try:
                         if self.CHAT_CONNECTED != 0:
                             bot.send_message(self.CHAT_CONNECTED, message)
                         else:
-                            update.message.reply_markdown('Use ***/connectchat id*** para me conectar ao chat indicado')
+                            bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='Use ***/connectchat id*** para me conectar ao chat indicado')
                     except:
-                        update.message.reply_markdown("Não estou no chat: ```{0}``` ou estou sem permissão".format(self.CHAT_CONNECTED))
+                        bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='Me adicione ao chat antes')
                 
                 # /connectchat ou cc
                 if command in ['cc', 'connectchat']:
-                    self.CHAT_CONNECTED = message
-                    update.message.reply_markdown('Me conectei ao chat: {0}'.format(message))
+                    bot.send_chat_action(chat_id=update.message.chat.id, action='typing')
+                    try:
+                        _chat = bot.get_chat(message)
+                        self.CHAT_CONNECTED = _chat.id
+                        bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='Me conectei ao chat: `{0}`'.format(_chat.title))
+                    except:
+                        bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='Me adicione a esse chat antes')
 
                 # /replymessage ou rm
                 if command in ['rm', 'replymessage']:
+                    bot.send_chat_action(chat_id=update.message.chat.id, action='typing')
                     message_id = message.split(' ')[0]
                     message = message.replace(message_id, '')
                     bot.send_message(chat_id=self.CHAT_CONNECTED, parse_mode='MARKDOWN', text=message, reply_to_message_id=message_id)
 
             # /gay
             if command in ['gay']:
-              bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text=' ┈┈┈╭━━━━━╮┈┈┈┈┈ \n┈┈┈┃┊┊┊┊┊┃┈┈┈┈┈ \n┈┈┈┃┊┊╭━╮┻╮┈┈┈┈ \n┈┈┈╱╲┊┃▋┃▋┃┈┈┈┈ \n┈┈╭┻┊┊╰━┻━╮┈┈┈┈ \n┈┈╰┳┊╭━━━┳╯┈┈┈┈ \n┈┈┈┃┊┃╰━━┫┈BAPAQ U GAY \n┈┈┈┈┈┈┏━┓┈┈┈┈┈┈')
+                bot.send_chat_action(chat_id=update.message.chat.id, action='typing')
+                bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text=' ┈┈┈╭━━━━━╮┈┈┈┈┈ \n┈┈┈┃┊┊┊┊┊┃┈┈┈┈┈ \n┈┈┈┃┊┊╭━╮┻╮┈┈┈┈ \n┈┈┈╱╲┊┃▋┃▋┃┈┈┈┈ \n┈┈╭┻┊┊╰━┻━╮┈┈┈┈ \n┈┈╰┳┊╭━━━┳╯┈┈┈┈ \n┈┈┈┃┊┃╰━━┫┈BAPAQ U GAY \n┈┈┈┈┈┈┏━┓┈┈┈┈┈┈')
                       
             # /tts
-            if command in ['tts']:
-                print(update.message) 
+            if command.startswith('tts'):
+                slow = None
+                if command.startswith('ttss'):
+                    slow = True
+                else:
+                    slow = False
                 tx = update.message.reply_to_message
                 message = message
                 if message:
@@ -118,14 +138,8 @@ class Bot():
                 except RuntimeError:
                     bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='Erro enquanto carregava o dicionário de idiomas.')
                 bot.send_chat_action(chat_id=update.message.chat.id, action='record_audio')
-                tts = gTTS(message, lang='pt-br')
+                tts = gTTS(message, lang='pt-br', slow=slow)
                 tts.save('v.mp3')
-                with open('v.mp3', 'rb') as a:
-                    ll = list(a)
-                    lc = len(ll)
-                if lc == 1:
-                    tts = gTTS(message, lang='pt-br')
-                    tts.save('v.mp3')
                 with open('v.mp3', 'rb') as a:
                     try:
                         bot.delete_message(chat_id=update.message.chat.id, message_id=update.message.message_id)
@@ -190,17 +204,79 @@ class Bot():
                         break
                 bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text=o)
             
-            return
-        
-        #print(update.message)
-        if not self.ACTIVE:
+            # /upload ou /up
+            if command in ['up', 'upload']:
+                tx = update.message.reply_to_message
+                final_url = ''
+                
+                bot.send_chat_action(chat_id=update.message.chat.id, action='typing')
+                
+                if message:
+                    pass
+                elif tx:
+                    if tx.document:
+                        if tx.document.file_name.endswith(('.zip')):
+                            bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=tx.message_id, text='***Formato de arquivo não suportado.***')
+                            #return
+                            
+                        file_name = '{0}-{1}'.format(tx.document.file_name, random.randint(0, 9999))
+                        
+                        try:
+                            file = bot.get_file(tx.document.file_id)
+                            file.download(custom_path='{0}{1}'.format(self.DOWNLOAD_DIR, file_name))
+                        except:
+                            bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=tx.message_id, text='***Arquivo muito pesado.***')
+                            return
+                            
+                        m_l = None
+                        with open(self.DOWNLOAD_DIR+file_name, 'rb') as fd:
+                            m_l = fd.readlines()
+                        message = ''
+                        for m in m_l:
+                            message += m.decode('utf-8')
+                        os.remove(self.DOWNLOAD_DIR+file_name)
+                    else:
+                        message = tx.text
+                
+                # del.dog
+                dFail = False
+                if not dFail:
+                    url = 'https://del.dog/'
+                    r = post(url + "documents", data=message.encode("utf-8"))
+                    r_te = None
+                    
+                    if r.status_code == 200:
+                        re = r.json()
+                        key = re['key']
+                        final_url = url+key
+                        
+                        r_te = (
+                            "`Upload bem sucedido!`\n\n"
+                            f"[Link Dogbin]({final_url})\n"
+                            f"[Ver RAW]({url}raw/{key})"
+                         )
+                    else:
+                        r_te = "`Falha ao se conectar com o del.dog`"
+                        dFail = True
+                     
+                    if tx:
+                        try:
+                            bot.delete_message(chat_id=update.message.chat.id, message_id=update.message.message_id)
+                        except:
+                            pass
+                    bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=tx.message_id, text=r_te)
+                    
+            # /chatid ou /cid
+            if command in ['cid', 'chatid']:
+               bot.send_message(chat_id=update.message.chat.id, parse_mode='MARKDOWN', reply_to_message_id=update.message.message_id, text='O id do chat atual é: `{0}`'.format(update.message.chat.id))
+          
             return
 
         if update.message.chat.id == self.CHAT_CONNECTED:
             message = update.message.text
             message = str(message).lower()
-            #bot.forward_message(chat_id=self.OWNER_CHAT_ID, from_chat_id=self.CHAT_CONNECTED, message_id=update.message.message_id)
-            bot.send_message(chat_id=self.OWNER_CHAT_ID, parse_mode='MARKDOWN', text='***U:*** @{0}    \n***M: 👇🏾***\n{1}    \n\n***Responda:*** ``` {2} ```👆🏾'.format(update.message.from_user.username, update.message.text, '!rm '+str(update.message.message_id)))
+            if self.ACTIVE:
+                bot.send_message(chat_id=self.OWNER_CHAT_ID, parse_mode='MARKDOWN', text='***U:*** @{0}    \n***M: 👇🏾***\n{1}    \n\n***Responda:*** ``` {2} ```👆🏾'.format(update.message.from_user.username, update.message.text, '!rm '+str(update.message.message_id)))
             
             if 'babaluu' in message:
                 update.message.reply_markdown('Me chamou?')
@@ -208,19 +284,14 @@ class Bot():
                 update.message.reply_markdown('Você é gay!')
             elif 'gay' in message or 'baitola' in message or 'viado' in message:
                 update.message.reply_markdown('Achei ofensivo, vou dizer que foi estupro.')
-                
-    def group_handler(self, bot, update):
-        if update.message.chat.id == self.CHAT_CONNECTED:
-            pass
             
     def deEmojify(self, text):
             return get_emoji_regexp().sub("", text)
                 
 if __name__ == '__main__':
     b = Bot()
-    updater = Updater(token= '' )
+    updater = Updater(token= '') 
 
     updater.dispatcher.add_handler(MessageHandler(Filters.all, b._handler))
-    #updater.dispatcher.add_handler(MessageHandler(Filters.group, b.group_handler))
 
     b.run(updater)
