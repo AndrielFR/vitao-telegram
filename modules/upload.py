@@ -5,12 +5,15 @@ from requests import exceptions, get, post
 import random
 
 class upload(Module):
-    def __init__(self, bot, update, command, message, chat_id):
+    def __init__(self, update, bot, command, message):
         self.bot = bot
+        
         self._message = update.message
+        
         self.command = command
         self.message = message
-        self.chat_id = chat_id
+        
+        self.chat_id = update.message.chat.id
         
     def _handler(self):
         tx = self._message.reply_to_message
@@ -22,12 +25,12 @@ class upload(Module):
         if message:
             pass
         elif tx:
-            if tx.voice or tx.photo:
+            if tx.voice or tx.photo or tx.video:
                 error = '***Formato de arquivo não suportado.***'
                 self._send_message(error, self._message.message_id)
                 return [False, error]
             if tx.document:
-                if tx.document.file_name.endswith(('.zip')):
+                if tx.document.file_name.endswith(('.zip', '.gif', '.mp4', '.tgz', '.tg')):
                     error = '***Formato de arquivo não suportado.***'
                     self._send_message(error, self._message.message_id)
                     return [False, error]
@@ -35,7 +38,7 @@ class upload(Module):
                 file_name = '{0}-{1}'.format(tx.document.file_name, random.randint(0, 9999))
                 
                 try:
-                    file = self.bot.get_file(tx.document.file_id)
+                    file = self._get_file(tx.document.file_id)
                     file.download(custom_path='{0}{1}'.format(self.DOWNLOAD_DIR, file_name))
                 except:
                     error = '***Arquivo muito pesado.***'

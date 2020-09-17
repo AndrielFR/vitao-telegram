@@ -4,12 +4,15 @@ from googletrans import LANGUAGES, Translator
 from emoji import get_emoji_regexp
 
 class TRT(Module):
-    def __init__(self, bot, update, command, message, chat_id):
+    def __init__(self, update, bot, command, message):
         self.bot = bot
+        
         self._message = update.message
+        
         self.command = command
         self.message = message
-        self.chat_id = chat_id
+        
+        self.chat_id = update.message.chat.id
         
     def _handler(self):
         translator = Translator()

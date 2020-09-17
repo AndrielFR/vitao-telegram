@@ -5,12 +5,15 @@ from gtts import gTTS
 import os
 
 class TTS(Module):
-    def __init__(self, bot, update, command, message, chat_id):
+    def __init__(self, update, bot, command, message):
         self.bot = bot
+        
         self._message = update.message
+        
         self.command = command
         self.message = message
-        self.chat_id = chat_id
+        
+        self.chat_id = update.message.chat.id
         
     def _handler(self):
         slow = None
