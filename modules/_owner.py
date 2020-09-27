@@ -7,16 +7,15 @@ class _owner(Module):
     def __init__(self, update, bot, command, message):
         self.bot = bot
         self.config = Configuration()
-        
+
         self._message = update.message
-        
+
         self.command = command
         self.message = message
-        
+
         self.chat_id = update.message.chat.id
-        
+
     def _handler(self):
-        self._send_action('typing')             
         # Sair do chat
         if self.command in ['lc', 'leavechat']:
             self._send_message(text='Até um outro dia pessoal, gostei de conhecer vocês.', chat_id=self.config.chat_connected)
@@ -27,19 +26,19 @@ class _owner(Module):
                     self._send_message('Sai com sucesso do chat: ```{0}```'. format(chat.title))
             else:
                 self._send_message('Não foi possível sair do chat: ```{0}```'. format(chat_id))
-                
+
         # Enviar mensagem
         if self.command in ['sm', 'sendmessage']:
             if not self._send_message(text=self.message, chat_id=self.config.chat_connected):
                 self._send_message('Não foi possível enviar a mensagem.')
-                
+
         # Responder mensagem
         if self.command in ['rm', 'replymessage']:
             message_id = self.message.split(' ')[0]
             message = self.message.replace(message_id, '')
             if not self._send_message(text=message, reply_to=message_id, chat_id=self.config.chat_connected):
                 self._send_message('Não foi possível responder a mensagem. (Provável que tenha sido excluída ou era de um bot)')
-                
+
         # Coletar números de membros no chat
         if self.command in ['gmc', 'getmemberscount']:
             chat_id = self.message if self.message else self.config.chat_connected
