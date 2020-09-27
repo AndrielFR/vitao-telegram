@@ -17,7 +17,7 @@ class TTS(Module):
         
     def _handler(self):
         slow = None
-        if self.command.startswith('ttss'):
+        if self.command == ('ttss'):
             slow = True
         else:
             slow = False
