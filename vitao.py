@@ -5,6 +5,7 @@ from telegram import *
 
 from modules.Module import Module
 from modules._Message_Handler import _Message_Handler
+from telegram.ext.dispatcher import run_async
 
 # Configuration
 from modules.Config import Configuration
@@ -19,14 +20,10 @@ class Bot():
     def __init__(self):
         self.config = Configuration()
         
+    @run_async
     def textHandler(self, update, context):
         self.module = _Message_Handler(update, context)
         self.module._handler()
-        
-    def run(self, updater):
-        print('Starting bot...')
-        updater.start_polling()
-        print('Bot on.')
         
     def error_handler(self, update, context):
         print('error: "{0}"'.format(context.error))
@@ -39,4 +36,6 @@ if __name__ == '__main__':
     
     #updater.dispatcher.add_error_handler(b.error_handler)
 
-    b.run(updater)
+    print('Starting bot...')
+    updater.start_polling()
+    print('Bot started!')
