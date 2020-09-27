@@ -12,7 +12,7 @@ class _poll(Module):
         self.chat_id = update.message.chat.id
         
     def _handler(self):
-        if self._message.chat.username in self.config.owner_name:
+        if self._message.from_user.username in self.config.owner_name:
             # Abrir enquete
             if self.command in ['npll', 'newpoll']:
                 message = self.message.split('\n')
