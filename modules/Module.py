@@ -100,6 +100,12 @@ class Module():
             else:
                 self.bot.send_poll(self.chat_id, question, awsners, is_anonymous=anonymous, type='regular', reply_to_message_id=reply_to)
             return True
-        except Exception as E:
-            print(E)
+        except:
+            return False
+
+    def _stop_poll(self, message_id):
+        try:
+            self.bot.stop_poll(self.chat_id, message_id)
+            return True
+        except:
             return False

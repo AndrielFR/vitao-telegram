@@ -65,7 +65,7 @@ class _Message_Handler(Module):
                 self.module = search_YouTube(self.update, self.bot, self.command, self.message)
                 
             # Poll Module
-            if self.command in ['npll', 'newpoll']:
+            if self.command in ['npll', 'newpoll', 'cpll', 'closepoll']:
                 self.module = _poll(self.update, self.bot, self.command, self.message)
 
             # EXEC Module
