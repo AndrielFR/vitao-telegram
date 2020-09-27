@@ -1,6 +1,8 @@
 from telegram.ext import *
 from telegram import *
 
+import random
+
 class Module():
     def __init__(self, update=None, bot=None, command='', message=''):
         pass
@@ -90,3 +92,14 @@ class Module():
         except:
             result = False
         return result
+
+    def _new_poll(self, question, awsners, reply_to=0, anonymous=False):
+        try:
+            if reply_to == 0:
+                self.bot.send_poll(self.chat_id, question, awsners, is_anonymous=anonymous, type='regular')
+            else:
+                self.bot.send_poll(self.chat_id, question, awsners, is_anonymous=anonymous, type='regular', reply_to_message_id=reply_to)
+            return True
+        except Exception as E:
+            print(E)
+            return False

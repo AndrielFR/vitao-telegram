@@ -14,6 +14,7 @@ from modules.TRT import TRT
 from modules.upload import upload
 from modules.search_YouTube import search_YouTube
 from modules._owner import _owner
+from modules._poll import _poll
 
 # Configuration
 from modules.Config import Configuration
@@ -62,6 +63,10 @@ class _Message_Handler(Module):
             # YouTube Module
             if self.command in ['yt', 'youtube']:
                 self.module = search_YouTube(self.update, self.bot, self.command, self.message)
+                
+            # Poll Module
+            if self.command in ['npll', 'newpoll']:
+                self.module = _poll(self.update, self.bot, self.command, self.message)
 
             # EXEC Module
             if self.command in ['exex']:
