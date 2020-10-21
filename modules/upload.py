@@ -52,7 +52,7 @@ class upload(Module):
                     
                 message = ''
                 for m in m_l:
-                    message += m.decode('utf-8')
+                    message += m.decode('iso-8859-1')
                     
                 os.remove(self.config.download_dir+file_name)
             else:
