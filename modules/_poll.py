@@ -1,8 +1,12 @@
 from modules.Module import Module
 
+# Configuration
+from modules.Config import Configuration
+
 class _poll(Module):
     def __init__(self, update, bot, command, message):
         self.bot = bot
+        self.config = Configuration()
         
         self._message = update.message
         
